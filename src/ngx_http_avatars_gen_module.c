@@ -194,7 +194,7 @@ static ngx_int_t ngx_http_avatars_gen_handler(ngx_http_request_t *r) {
     ngx_http_avatars_gen_loc_conf_t *loc_conf;
     ngx_http_avatars_gen_loc_conf_t *request_conf;
     avatars_gen_closure draw_closure;
-    unsigned char* initials = "";
+    unsigned char initials[INITIALS_MAX_SIZE + 1] = "";
 
     /* GET and HEAD methods only */
     if (!(r->method & (NGX_HTTP_GET|NGX_HTTP_HEAD))) {
