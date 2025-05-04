@@ -32,6 +32,7 @@ static void *ngx_http_avatars_gen_create_loc_conf(ngx_conf_t *cf) {
     conf->font_italic = NGX_CONF_UNSET;
     conf->font_bold = NGX_CONF_UNSET;
     conf->square = NGX_CONF_UNSET;
+    conf->random_bg_color = NGX_CONF_UNSET;
     return conf;
 }
 
@@ -65,6 +66,9 @@ static char *ngx_http_avatars_gen_merge_loc_conf(ngx_conf_t *cf, void *parent, v
     }
     if (conf->square == NGX_CONF_UNSET) {
         conf->square = 0;
+    }
+    if (conf->random_bg_color == NGX_CONF_UNSET) {
+        conf->random_bg_color = 0;
     }
     return NGX_CONF_OK;
 }
@@ -138,6 +142,12 @@ static ngx_command_t ngx_http_avatars_gen_commands[] = {
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_avatars_gen_loc_conf_t, square),
       NULL},
+    { ngx_string("avatars_gen_random_bg_color"),
+      NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+      ngx_conf_set_flag_slot,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      offsetof(ngx_http_avatars_gen_loc_conf_t, random_bg_color),
+      NULL},
 
     ngx_null_command
 };
@@ -184,7 +194,7 @@ static ngx_int_t ngx_http_avatars_gen_handler(ngx_http_request_t *r) {
     ngx_http_avatars_gen_loc_conf_t *loc_conf;
     ngx_http_avatars_gen_loc_conf_t *request_conf;
     avatars_gen_closure draw_closure;
-    unsigned char initials[INITIALS_MAX_SIZE + 1] = "";
+    unsigned char* initials = "";
 
     /* GET and HEAD methods only */
     if (!(r->method & (NGX_HTTP_GET|NGX_HTTP_HEAD))) {
