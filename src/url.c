@@ -29,11 +29,6 @@ int ngx_http_avatars_gen_get_initials_from_uri(ngx_str_t *uri, unsigned char *in
         initials[characters_copied - i - 1] = tmp;
     }
     initials[characters_copied] = '\0';
-    /* Validate length */
-    size_t utf8_count = ngx_utf8_length(initials, characters_copied - 1);
-    if ((utf8_count > 2) || (utf8_count < 1)) {
-        return 0;
-    }
     return 1;
 }
 
