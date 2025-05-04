@@ -46,6 +46,9 @@ cairo_status_t write_func(void *closure, const unsigned char *data, unsigned int
     return CAIRO_STATUS_SUCCESS;
 }
 
+static double compute_luminance(double r, double g, double b) {
+    return r * 0.299 + g * 0.587 + b * 0.114;
+}
 
 /* Draw avatar by provided options */
 void ngx_http_avatars_gen_generate_avatar(avatars_gen_closure *closure, ngx_http_avatars_gen_loc_conf_t *conf, char *text) {
@@ -63,7 +66,11 @@ void ngx_http_avatars_gen_generate_avatar(avatars_gen_closure *closure, ngx_http
         double radius = conf->avatar_size / 2.0;
         cairo_arc(cr, radius, radius, radius - contour_offset, 0, 2 * M_PI);
     }
-    cairo_set_source_rgb(cr, conf->bg_color.red, conf->bg_color.green, conf->bg_color.blue);
+    /* Set background color */
+    double bg_red = conf->random_bg_color ? (double) rand() / RAND_MAX : conf->bg_color.red;
+    double bg_green = conf->random_bg_color ? (double) rand() / RAND_MAX : conf->bg_color.green;
+    double bg_blue = conf->random_bg_color ? (double) rand() / RAND_MAX : conf->bg_color.blue;
+    cairo_set_source_rgb(cr, bg_red, bg_green, bg_blue);
     cairo_fill_preserve(cr);
     if (conf->show_contour) {
         cairo_set_line_width(cr, 2.5);
@@ -81,12 +88,29 @@ void ngx_http_avatars_gen_generate_avatar(avatars_gen_closure *closure, ngx_http
         font_weight = CAIRO_FONT_WEIGHT_BOLD;
     }
     cairo_select_font_face(cr, (char *)conf->font_face.data, font_slant, font_weight);
-    cairo_set_font_size(cr, conf->font_size);
+    /* Adjust font size */
+    double font_size = conf->font_size;
+    double max_width = conf->avatar_size * 0.9;
+    cairo_set_font_size(cr, font_size);
     cairo_text_extents(cr, text, &extents);
+    while (extents.width > max_width && font_size > 8) {
+        font_size *= 0.95;
+        cairo_set_font_size(cr, font_size);
+        cairo_text_extents(cr, text, &extents);
+    }
     double x = (conf->avatar_size / 2.0) - (extents.width/2 + extents.x_bearing);
     double y = (conf->avatar_size / 2.0) - (extents.height/2 + extents.y_bearing);
     cairo_move_to(cr, x, y);
-    cairo_set_source_rgb(cr, conf->font_color.red, conf->font_color.green, conf->font_color.blue);
+    double font_red = conf->font_color.red;
+    double font_green = conf->font_color.green;
+    double font_blue = conf->font_color.blue;
+    if (conf->random_bg_color) {
+        double luminance = compute_luminance(bg_red, bg_green, bg_blue);
+        font_red = luminance > 0.5 ? 0.0 : 1.0;
+        font_green = luminance > 0.5 ? 0.0 : 1.0;
+        font_blue = luminance > 0.5 ? 0.0 : 1.0;
+    }
+    cairo_set_source_rgb(cr, font_red,font_green,font_blue);
     cairo_show_text(cr, text);
     /* Save and destroy */
     cairo_destroy (cr);
