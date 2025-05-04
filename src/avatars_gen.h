@@ -10,7 +10,7 @@
 #include <math.h>
 
 
-#define INITIALS_MAX_SIZE 12
+#define INITIALS_MAX_SIZE 256
 
 
 typedef struct avatars_gen_rgb avatars_gen_rgb;
@@ -33,6 +33,7 @@ typedef struct {
     ngx_flag_t font_bold;
     ngx_flag_t show_contour;
     ngx_flag_t square;
+    ngx_flag_t random_bg_color;
 } ngx_http_avatars_gen_loc_conf_t;
 
 
